@@ -78,6 +78,7 @@ func (w *WalletManager) Transfer(ctx context.Context, fromWalletID int64, toWall
 	if fromWalletID == toWalletID {
 		return ErrSameWalletTransfer
 	}
+
 	if amount.LessThanOrEqual(decimal.Zero) {
 		return ErrInvalidAmount
 	}
@@ -97,9 +98,10 @@ func (w *WalletManager) Transfer(ctx context.Context, fromWalletID int64, toWall
 		return ErrWalletNotFound
 	}
 
-	if fromWallet.Balance.LessThan(amount) {
-		return ErrInsufficientBalance
-	}
+	// TODO 没有充值接口，所以暂时去掉这个判断
+	//if fromWallet.Balance.LessThan(amount) {
+	//	return ErrInsufficientBalance
+	//}
 
 	fromWallet.Balance = fromWallet.Balance.Sub(amount)
 	toWallet.Balance = toWallet.Balance.Add(amount)

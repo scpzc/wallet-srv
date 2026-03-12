@@ -45,11 +45,12 @@ grpcurl -plaintext 127.0.0.1:8080 list
 grpcurl -plaintext 127.0.0.1:8080 list wallet_srv.Wallet
 ```
 
+
 ### 2) 创建钱包（Wallets）
 
 ```bash
-grpcurl -plaintext -d '{"userId":1}' 127.0.0.1:8080 wallet_srv.Wallet/Wallets
-grpcurl -plaintext -d '{"userId":2}' 127.0.0.1:8080 wallet_srv.Wallet/Wallets
+grpcurl -plaintext -d '{"UserId":1}' 127.0.0.1:8080 wallet_srv.Wallet/Wallets
+grpcurl -plaintext -d '{"UserId":2}' 127.0.0.1:8080 wallet_srv.Wallet/Wallets
 ```
 
 ### 3) 查询钱包（WalletsByID）
@@ -73,7 +74,7 @@ grpcurl -plaintext -d '{"walletID":1}' 127.0.0.1:8080 wallet_srv.Wallet/WalletsB
 grpcurl -plaintext -d '{"walletID":2}' 127.0.0.1:8080 wallet_srv.Wallet/WalletsByID
 ```
 
-> 注意：当前实现没有“充值/入金”接口，默认余额为 0；如果要测试“余额不足/成功转账”的完整流程，建议先扩展一个 `Deposit` 接口或在 DAO 层注入初始余额。
+> 注意：当前实现没有“充值/入金”接口，默认余额为 0；因此去掉了余额的验证。
 
 ## 运行测试
 
