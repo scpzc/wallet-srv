@@ -3,7 +3,6 @@ package dao
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/shopspring/decimal"
@@ -25,69 +24,100 @@ type Wallet struct {
 }
 
 type WalletManager struct {
-	sync.RWMutex
-	wallets sync.Map
+	mu      sync.RWMutex
+	wallets map[int64]*Wallet
 }
 
 func NewWalletManager() *WalletManager {
-	return &WalletManager{}
+	return &WalletManager{
+		wallets: make(map[int64]*Wallet),
+	}
 }
 
 // 初始化钱包
 func (w *WalletManager) Init(ctx context.Context, walletID int64) (int64, error) {
-	w.Lock()
-	defer w.Unlock()
-	wallet := &Wallet{UserId: walletID}
-	w.wallets.Store(walletID, wallet)
-	wallet11, ok := w.wallets.Load(walletID)
-	fmt.Println(wallet11, ok)
+	if walletID <= 0 {
+		return 0, ErrInvalidWalletID
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if _, ok := w.wallets[walletID]; ok {
+		return walletID, nil
+	}
+	w.wallets[walletID] = &Wallet{
+		UserId:  walletID,
+		Balance: decimal.Zero,
+	}
 	return walletID, nil
 }
 
 // 获取钱包
 func (w *WalletManager) Get(ctx context.Context, walletID int64) (*Wallet, error) {
-	w.RLock()
-	defer w.RUnlock()
-	wallet, ok := w.wallets.Load(walletID)
-	if !ok {
-		logx.Errorw("wallet not found", logx.Field("wallet_id", walletID))
-		return nil, errors.New("wallet not found")
+	if walletID <= 0 {
+		return nil, ErrInvalidWalletID
 	}
-	return wallet.(*Wallet), nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	wallet, ok := w.wallets[walletID]
+	if !ok || wallet == nil {
+		logx.Errorw("wallet not found", logx.Field("wallet_id", walletID))
+		return nil, ErrWalletNotFound
+	}
+	// 返回副本，避免外部绕过锁修改内部状态
+	return &Wallet{
+		UserId:  wallet.UserId,
+		Balance: wallet.Balance,
+	}, nil
 }
 
 // 转账
 func (w *WalletManager) Transfer(ctx context.Context, fromWalletID int64, toWalletID int64, amount decimal.Decimal) error {
-	w.Lock()
-	defer w.Unlock()
-	fromWallet, ok := w.wallets.Load(fromWalletID)
-	if !ok {
-		logx.Errorw("wallet not found", logx.Field("wallet_id", fromWalletID))
-		return errors.New("wallet not found")
+	if fromWalletID <= 0 || toWalletID <= 0 {
+		return ErrInvalidWalletID
 	}
-	toWallet, ok := w.wallets.Load(toWalletID)
-	if !ok {
-		logx.Errorw("wallet not found", logx.Field("wallet_id", fromWalletID))
-		return errors.New("wallet not found")
+	if fromWalletID == toWalletID {
+		return ErrSameWalletTransfer
 	}
-	fromBalance := fromWallet.(*Wallet).Balance
+	if amount.LessThanOrEqual(decimal.Zero) {
+		return ErrInvalidAmount
+	}
 
-	// TODO 因为没有加余额的方法，所以这里先不考虑
-	//if fromBalance.LessThan(amount) {
-	//	return errors.New("insufficient balance")
-	//}
+	w.mu.Lock()
+	defer w.mu.Unlock()
 
-	toBalance := toWallet.(*Wallet).Balance
+	fromWallet, ok := w.wallets[fromWalletID]
+	if !ok || fromWallet == nil {
+		logx.Errorw("wallet not found", logx.Field("wallet_id", fromWalletID))
+		return ErrWalletNotFound
+	}
 
-	fromWallet.(*Wallet).Balance = fromBalance.Sub(amount)
-	toWallet.(*Wallet).Balance = toBalance.Add(amount)
+	toWallet, ok := w.wallets[toWalletID]
+	if !ok || toWallet == nil {
+		logx.Errorw("wallet not found", logx.Field("wallet_id", toWalletID))
+		return ErrWalletNotFound
+	}
+
+	if fromWallet.Balance.LessThan(amount) {
+		return ErrInsufficientBalance
+	}
+
+	fromWallet.Balance = fromWallet.Balance.Sub(amount)
+	toWallet.Balance = toWallet.Balance.Add(amount)
 
 	logx.Infow("transfer success",
 		logx.Field("from", fromWalletID),
 		logx.Field("to", toWalletID),
 		logx.Field("amount", amount.String()),
-		logx.Field("from_balance", fromWallet.(*Wallet).Balance.String()),
-		logx.Field("to_balance", toWallet.(*Wallet).Balance.String()),
+		logx.Field("from_balance", fromWallet.Balance.String()),
+		logx.Field("to_balance", toWallet.Balance.String()),
 	)
 	return nil
 }
+
+var (
+	ErrWalletNotFound      = errors.New("wallet not found")
+	ErrInsufficientBalance = errors.New("insufficient balance")
+	ErrInvalidAmount       = errors.New("invalid amount")
+	ErrInvalidWalletID     = errors.New("invalid wallet id")
+	ErrSameWalletTransfer  = errors.New("same wallet transfer")
+)
