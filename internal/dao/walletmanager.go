@@ -33,6 +33,7 @@ func NewWalletManager() *WalletManager {
 	return &WalletManager{}
 }
 
+// 初始化钱包
 func (w *WalletManager) Init(ctx context.Context, walletID int64) (int64, error) {
 	w.Lock()
 	defer w.Unlock()
@@ -43,6 +44,7 @@ func (w *WalletManager) Init(ctx context.Context, walletID int64) (int64, error)
 	return walletID, nil
 }
 
+// 获取钱包
 func (w *WalletManager) Get(ctx context.Context, walletID int64) (*Wallet, error) {
 	w.RLock()
 	defer w.RUnlock()
@@ -53,6 +55,8 @@ func (w *WalletManager) Get(ctx context.Context, walletID int64) (*Wallet, error
 	}
 	return wallet.(*Wallet), nil
 }
+
+// 转账
 func (w *WalletManager) Transfer(ctx context.Context, fromWalletID int64, toWalletID int64, amount decimal.Decimal) error {
 	w.Lock()
 	defer w.Unlock()
