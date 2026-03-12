@@ -14,11 +14,17 @@ import (
 )
 
 type (
-	WalletsReq  = wallet_srv.WalletsReq
-	WalletsResp = wallet_srv.WalletsResp
+	TransferReq     = wallet_srv.TransferReq
+	TransferResp    = wallet_srv.TransferResp
+	WalletsByIDReq  = wallet_srv.WalletsByIDReq
+	WalletsByIDResp = wallet_srv.WalletsByIDResp
+	WalletsReq      = wallet_srv.WalletsReq
+	WalletsResp     = wallet_srv.WalletsResp
 
 	Wallet interface {
 		Wallets(ctx context.Context, in *WalletsReq, opts ...grpc.CallOption) (*WalletsResp, error)
+		WalletsByID(ctx context.Context, in *WalletsByIDReq, opts ...grpc.CallOption) (*WalletsByIDResp, error)
+		Transfer(ctx context.Context, in *TransferReq, opts ...grpc.CallOption) (*TransferResp, error)
 	}
 
 	defaultWallet struct {
@@ -35,4 +41,14 @@ func NewWallet(cli zrpc.Client) Wallet {
 func (m *defaultWallet) Wallets(ctx context.Context, in *WalletsReq, opts ...grpc.CallOption) (*WalletsResp, error) {
 	client := wallet_srv.NewWalletClient(m.cli.Conn())
 	return client.Wallets(ctx, in, opts...)
+}
+
+func (m *defaultWallet) WalletsByID(ctx context.Context, in *WalletsByIDReq, opts ...grpc.CallOption) (*WalletsByIDResp, error) {
+	client := wallet_srv.NewWalletClient(m.cli.Conn())
+	return client.WalletsByID(ctx, in, opts...)
+}
+
+func (m *defaultWallet) Transfer(ctx context.Context, in *TransferReq, opts ...grpc.CallOption) (*TransferResp, error) {
+	client := wallet_srv.NewWalletClient(m.cli.Conn())
+	return client.Transfer(ctx, in, opts...)
 }

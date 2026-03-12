@@ -1,11 +1,10 @@
-package logic
+package dao
 
 import (
 	"context"
+	"github.com/shopspring/decimal"
 	"sync"
 	"testing"
-
-	"github.com/shopspring/decimal"
 )
 
 func TestWalletManager_Transfer(t *testing.T) {

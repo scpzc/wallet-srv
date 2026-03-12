@@ -23,8 +23,12 @@ func NewWalletsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *WalletsLo
 	}
 }
 
-func (l *WalletsLogic) Wallets(in *wallet_srv.WalletsReq) (*wallet_srv.WalletsResp, error) {
-	// todo: add your logic here and delete this line
-
-	return &wallet_srv.WalletsResp{}, nil
+func (l *WalletsLogic) Wallets(req *wallet_srv.WalletsReq) (*wallet_srv.WalletsResp, error) {
+	walletID, err := l.svcCtx.WalletManager.Init(l.ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	return &wallet_srv.WalletsResp{
+		WalletID: walletID,
+	}, nil
 }

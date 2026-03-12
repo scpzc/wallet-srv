@@ -1,8 +1,9 @@
-package logic
+package dao
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/shopspring/decimal"
@@ -24,6 +25,7 @@ type Wallet struct {
 }
 
 type WalletManager struct {
+	sync.RWMutex
 	wallets sync.Map
 }
 
@@ -32,20 +34,28 @@ func NewWalletManager() *WalletManager {
 }
 
 func (w *WalletManager) Init(ctx context.Context, walletID int64) (int64, error) {
+	w.Lock()
+	defer w.Unlock()
 	wallet := &Wallet{UserId: walletID}
 	w.wallets.Store(walletID, wallet)
+	wallet11, ok := w.wallets.Load(walletID)
+	fmt.Println(wallet11, ok)
 	return walletID, nil
 }
 
 func (w *WalletManager) Get(ctx context.Context, walletID int64) (*Wallet, error) {
+	w.RLock()
+	defer w.RUnlock()
 	wallet, ok := w.wallets.Load(walletID)
 	if !ok {
 		logx.Errorw("wallet not found", logx.Field("wallet_id", walletID))
-		return nil, nil
+		return nil, errors.New("wallet not found")
 	}
 	return wallet.(*Wallet), nil
 }
 func (w *WalletManager) Transfer(ctx context.Context, fromWalletID int64, toWalletID int64, amount decimal.Decimal) error {
+	w.Lock()
+	defer w.Unlock()
 	fromWallet, ok := w.wallets.Load(fromWalletID)
 	if !ok {
 		logx.Errorw("wallet not found", logx.Field("wallet_id", fromWalletID))

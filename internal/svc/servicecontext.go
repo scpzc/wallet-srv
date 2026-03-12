@@ -1,13 +1,18 @@
 package svc
 
-import "wallet-srv/internal/config"
+import (
+	"wallet-srv/internal/config"
+	"wallet-srv/internal/dao"
+)
 
 type ServiceContext struct {
-	Config config.Config
+	Config        config.Config
+	WalletManager dao.IWallet
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
-		Config: c,
+		Config:        c,
+		WalletManager: dao.NewWalletManager(),
 	}
 }

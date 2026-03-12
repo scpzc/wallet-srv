@@ -6,11 +6,30 @@ option go_package = "./wallet_srv";
 
 service Wallet {
   rpc Wallets(WalletsReq) returns(WalletsResp);
+  rpc WalletsByID(WalletsByIDReq) returns (WalletsByIDResp);
+  rpc Transfer(TransferReq) returns (TransferResp);
 }
 
 message WalletsReq  {
-  string name    = 1;
+  int64 UserId   = 1;
 }
 message WalletsResp {
-  string walletID = 1;
+  int64 walletID = 1;
+}
+
+message WalletsByIDReq{
+  int64 walletID = 1;
+}
+
+message WalletsByIDResp{
+  int64 walletID = 1;
+  string balance = 2;
+}
+message TransferReq{
+  int64 fromWalletID = 1;
+  int64 toWalletID = 2;
+  string amount = 3;
+}
+message TransferResp{
+  string result = 1;
 }

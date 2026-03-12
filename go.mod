@@ -3,6 +3,7 @@ module wallet-srv
 go 1.26
 
 require (
+	github.com/shopspring/decimal v1.4.0
 	github.com/zeromicro/go-zero v1.10.0
 	google.golang.org/grpc v1.79.2
 	google.golang.org/protobuf v1.36.11

@@ -27,3 +27,13 @@ func (s *WalletServer) Wallets(ctx context.Context, in *wallet_srv.WalletsReq) (
 	l := logic.NewWalletsLogic(ctx, s.svcCtx)
 	return l.Wallets(in)
 }
+
+func (s *WalletServer) WalletsByID(ctx context.Context, in *wallet_srv.WalletsByIDReq) (*wallet_srv.WalletsByIDResp, error) {
+	l := logic.NewWalletsByIDLogic(ctx, s.svcCtx)
+	return l.WalletsByID(in)
+}
+
+func (s *WalletServer) Transfer(ctx context.Context, in *wallet_srv.TransferReq) (*wallet_srv.TransferResp, error) {
+	l := logic.NewTransferLogic(ctx, s.svcCtx)
+	return l.Transfer(in)
+}
