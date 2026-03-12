@@ -1,0 +1,16 @@
+syntax = "proto3";
+package wallet_srv;
+option go_package = "./wallet_srv";
+
+
+
+service Wallet {
+  rpc Wallets(WalletsReq) returns(WalletsResp);
+}
+
+message WalletsReq  {
+  string name    = 1;
+}
+message WalletsResp {
+  string walletID = 1;
+}
